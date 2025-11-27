@@ -1,7 +1,12 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from api.serializers import ReactivateAccountSerializer
+from api.serializers import (
+    RegisterResellerSerializer,
+    RegisterSupplierSerializer,
+    LoginSerializer,
+    ReactivateAccountSerializer
+)
 from api.services.auth_service import auth_service
 from api.services.catalog_service import catalog_service
 from api.utils.decorators import require_auth, require_role
@@ -24,36 +29,85 @@ def health_check(_request):
 
 @api_view(['POST'])
 def register_reseller(request):
+    serializer = RegisterResellerSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response({
+            'success': False,
+            'message': 'Error de validacion',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     try:
-        result = auth_service.register_reseller(request.data)
-        return Response({'success': True, 'message': 'Revendedor registrado exitosamente', 'data': result}, status=status.HTTP_201_CREATED)
+        result = auth_service.register_reseller(serializer.validated_data)
+        return Response({
+            'success': True,
+            'message': 'Revendedor registrado exitosamente',
+            'data': result
+        }, status=status.HTTP_201_CREATED)
     except ValueError as exc:
         code = status.HTTP_409_CONFLICT if 'email' in str(exc) else status.HTTP_400_BAD_REQUEST
         return Response({'success': False, 'message': str(exc)}, status=code)
-    except Exception as exc:   
-        return Response({'success': False, 'message': 'Error al registrar revendedor', 'error': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as exc:
+        return Response({
+            'success': False,
+            'message': 'Error al registrar revendedor',
+            'error': str(exc)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def register_supplier(request):
+    serializer = RegisterSupplierSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response({
+            'success': False,
+            'message': 'Error de validacion',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     try:
-        result = auth_service.register_supplier(request.data)
-        return Response({'success': True, 'message': 'Proveedor registrado exitosamente', 'data': result}, status=status.HTTP_201_CREATED)
+        result = auth_service.register_supplier(serializer.validated_data)
+        return Response({
+            'success': True,
+            'message': 'Proveedor registrado exitosamente',
+            'data': result
+        }, status=status.HTTP_201_CREATED)
     except ValueError as exc:
         code = status.HTTP_409_CONFLICT if 'email' in str(exc) else status.HTTP_400_BAD_REQUEST
         return Response({'success': False, 'message': str(exc)}, status=code)
-    except Exception as exc:   
-        return Response({'success': False, 'message': 'Error al registrar proveedor', 'error': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as exc:
+        return Response({
+            'success': False,
+            'message': 'Error al registrar proveedor',
+            'error': str(exc)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 def login(request):
+    serializer = LoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response({
+            'success': False,
+            'message': 'Datos invalidos',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     try:
-        result = auth_service.login(request.data)
-        return Response({'success': True, 'message': 'Login exitoso', 'data': result})
+        result = auth_service.login(serializer.validated_data)
+        return Response({
+            'success': True,
+            'message': 'Login exitoso',
+            'data': result
+        }, status=status.HTTP_200_OK)
     except ValueError as exc:
         code = status.HTTP_401_UNAUTHORIZED if 'Credenciales' in str(exc) or 'Cuenta desactivada' in str(exc) else status.HTTP_400_BAD_REQUEST
         return Response({'success': False, 'message': str(exc)}, status=code)
-    except Exception as exc:   
-        return Response({'success': False, 'message': 'Error al iniciar sesion', 'error': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as exc:
+        return Response({
+            'success': False,
+            'message': 'Error al iniciar sesion',
+            'error': str(exc)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 @api_view(['POST'])
 def reactivate_account(request):
     serializer = ReactivateAccountSerializer(data=request.data)
