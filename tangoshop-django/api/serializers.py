@@ -26,3 +26,7 @@ class ProductSerializer(serializers.Serializer):
     price = serializers.FloatField()
     categoryId = serializers.CharField()
     photoURL = serializers.CharField(required=False, allow_blank=True)
+
+class ReactivateAccountSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, min_length=8)
